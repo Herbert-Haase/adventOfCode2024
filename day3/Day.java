@@ -49,26 +49,37 @@ public final class Day {
 	}
 
 	private static String filterInstructions(String input) {
-		// This regex captures all enabled `mul(...)` sections
-		Pattern pattern = Pattern.compile("(do\\(\\)|don't\\()|(mul\\(\\d{1,3},\\d{1,3}\\))");
-		Matcher matcher = pattern.matcher(input);
-
+		boolean mulEnabled = true; // Initially, mul is enabled
 		StringBuilder filtered = new StringBuilder();
-		boolean mulEnabled = true;
 
-		while (matcher.find()) {
-			String match = matcher.group();
+		// Regex patterns for instructions
+		Pattern mulPattern = Pattern.compile("mul\\(\\d{1,3},\\d{1,3}\\)");
 
-			if ("do()".equals(match)) {
-				mulEnabled = true; // Enable `mul`
-			} else if ("don't()".equals(match)) {
-				mulEnabled = false; // Disable `mul`
-			} else if (mulEnabled && match.startsWith("mul(")) {
-				filtered.append(match).append(" "); // Append `mul(...)` if enabled
+		int i = 0;
+		while (i < input.length()) {
+			// Check for `do()` and `don't()`
+			if (input.startsWith("do()", i)) {
+				mulEnabled = true;
+				i += "do()".length();
+			} else if (input.startsWith("don't()", i)) {
+				mulEnabled = false;
+				i += "don't()".length();
+			}
+			// Append `mul(...)` only if enabled
+			else if (input.startsWith("mul(", i)) {
+				Matcher matcher = mulPattern.matcher(input.substring(i));
+				if (matcher.find() && mulEnabled) {
+					filtered.append(matcher.group()).append(" ");
+					i += matcher.end();
+				} else {
+					i++; // Move forward if no match or not enabled
+				}
+			} else {
+				i++; // Move forward for any other characters
 			}
 		}
 
-		return filtered.toString().trim();
+		return filtered.toString();
 	}
 
 }
